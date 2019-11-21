@@ -65,8 +65,8 @@ Vagrant.configure('2') do |config|
       end
 
       box.vm.provision 'shell' do |s|
-        s.path = 'scripts/init.sh'
-        s.args= []
+        s.path = 'scripts/var_home.sh'
+        s.args = []
       end
     end
   end
