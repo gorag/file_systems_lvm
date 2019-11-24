@@ -32,7 +32,23 @@ for i in /proc/ /sys/ /dev/ /run/ /boot/; do
   mount --bind $i /mnt/$i
 done
 
-cat <<EOF | chroot /mnt
+chroot /mnt /bin/bash <<EOT
 grub2-mkconfig -o /boot/grub2/grub.cfg
+cd /boot
+for i in \$(ls initramfs-*img); do
+  dracut -v \$i \$(echo \$i | sed "s/initramfs-//g; s/.img//g") --force
+done
 sed -i "s/$4\/$5/$2\/$3/" /boot/grub2/grub.cfg
-EOF
+if [ "$1" = '' ]; then
+  pvcreate /dev/sdc /dev/sdd
+  vgcreate vg_var /dev/sdc /dev/sdd
+  lvcreate -L 950M -m1 -n lv_var vg_var
+  mkfs.ext4 /dev/vg_var/lv_var
+  mount /dev/vg_var/lv_var /mnt
+  cp -aR /var/* /mnt/
+  rm -rf /var/*
+  umount /mnt
+  mount /dev/vg_var/lv_var /var
+  echo "\$(blkid | grep var: | awk '{print \$2}') /var ext4 defaults 0 0" >> /etc/fstab
+fi
+EOT
