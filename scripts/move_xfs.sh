@@ -45,11 +45,20 @@ if [ "$1" = '' ]; then
   lvcreate -L 950M -m1 -n lv_var vg_var -y
   mkfs.ext4 /dev/vg_var/lv_var
   mount /dev/vg_var/lv_var /mnt
-  cp -aR /var/* /mnt/
-  rsync -avHPSAX /var/ /mnt/
+  # cp -aR /var/* /mnt/
+  rsync -aHPSAX /var/ /mnt/
   rm -rf /var/*
   umount /mnt
   mount /dev/vg_var/lv_var /var
   echo "\$(blkid | grep var: | awk '{print \$2}') /var ext4 defaults 0 0" >> /etc/fstab
+
+  lvcreate -n LogVol_Home -L 2G /dev/VolGroup00
+  mkfs.xfs /dev/VolGroup00/LogVol_Home
+  mount /dev/VolGroup00/LogVol_Home /mnt/
+  rsync -aHPSAX /home/ /mnt/
+  rm -rf /home/*
+  umount /mnt
+  mount /dev/VolGroup00/LogVol_Home /home/
+  echo "\$(blkid | grep Home | awk '{print \$2}') /home xfs defaults 0 0" >> /etc/fstab
 fi
 EOT
