@@ -42,10 +42,11 @@ sed -i "s/$4\/$5/$2\/$3/" /boot/grub2/grub.cfg
 if [ "$1" = '' ]; then
   pvcreate /dev/sdc /dev/sdd
   vgcreate vg_var /dev/sdc /dev/sdd
-  lvcreate -L 950M -m1 -n lv_var vg_var
+  lvcreate -L 950M -m1 -n lv_var vg_var -y
   mkfs.ext4 /dev/vg_var/lv_var
   mount /dev/vg_var/lv_var /mnt
   cp -aR /var/* /mnt/
+  rsync -avHPSAX /var/ /mnt/
   rm -rf /var/*
   umount /mnt
   mount /dev/vg_var/lv_var /var
