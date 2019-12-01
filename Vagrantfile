@@ -65,7 +65,7 @@ Vagrant.configure('2') do |config|
       end
 
       box.vm.provision 'shell' do |s|
-        s.path = 'scripts/home.sh'
+        s.path = 'scripts/remove_temp_vg.sh'
         s.args = []
       end
     end

@@ -60,5 +60,14 @@ if [ "$1" = '' ]; then
   umount /mnt
   mount /dev/VolGroup00/LogVol_Home /home/
   echo "\$(blkid | grep Home | awk '{print \$2}') /home xfs defaults 0 0" >> /etc/fstab
+  touch /home/file{1..20}
+  ls /home
+  lvcreate -L 100MB -s -n home_snap /dev/VolGroup00/LogVol_Home
+  rm -f /home/file{11..20}
+  ls /home
+  umount /home
+  lvconvert --merge /dev/VolGroup00/home_snap
+  mount /home
+  ls /home
 fi
 EOT
