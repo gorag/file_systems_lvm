@@ -3,7 +3,10 @@
 # -*- mode: ruby -*-
 # vim: set ft=ruby :
 
-home = ENV['HOME']
+VMS_PATH = `VBoxManage list systemproperties |
+  grep "Default machine folder:" | awk '{print $4}' | tr -d '\n'`
+NAME_MACHINE = 'lvm-012020'
+
 ENV['LC_ALL'] = 'en_US.UTF-8'
 
 MACHINES = {
@@ -13,22 +16,22 @@ MACHINES = {
     ip_addr: '192.168.11.101',
     disks: {
       sata1: {
-        dfile: home + '/VirtualBox VMs/sata1.vdi',
+        dfile: "sata1.vdi",
         size: 10_240,
         port: 1
       },
       sata2: {
-        dfile: home + '/VirtualBox VMs/sata2.vdi',
+        dfile: "sata2.vdi",
         size: 2048, # Megabytes
         port: 2
       },
       sata3: {
-        dfile: home + '/VirtualBox VMs/sata3.vdi',
+        dfile: "sata3.vdi",
         size: 1024, # Megabytes
         port: 3
       },
       sata4: {
-        dfile: home + '/VirtualBox VMs/sata4.vdi',
+        dfile: "sata4.vdi",
         size: 1024,
         port: 4
       }
@@ -48,18 +51,21 @@ Vagrant.configure('2') do |config|
       box.vm.network 'private_network', ip: boxconfig[:ip_addr]
 
       box.vm.provider :virtualbox do |vb|
+        vb.name = NAME_MACHINE
         vb.customize ['modifyvm', :id, '--memory', '256', '--audio', 'none']
         needsController = false
         boxconfig[:disks].each do |_dname, dconf|
-          unless File.exist?(dconf[:dfile])
-            vb.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Fixed', '--size', dconf[:size]]
+          dfile_disk = "#{VMS_PATH}/#{NAME_MACHINE}/#{dconf[:dfile]}"
+          unless File.exist?(dfile_disk)
+            vb.customize ['createhd', '--filename', dfile_disk, '--variant', 'Fixed', '--size', dconf[:size]]
             needsController = true
           end
         end
         if needsController == true
           vb.customize ['storagectl', :id, '--name', 'SATA', '--add', 'sata']
           boxconfig[:disks].each do |_dname, dconf|
-            vb.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
+            dfile_disk = "#{VMS_PATH}/#{NAME_MACHINE}/#{dconf[:dfile]}"
+            vb.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dfile_disk]
           end
         end
       end
